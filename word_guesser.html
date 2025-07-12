@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Guess Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f0f0;
+      text-align: center;
+    }
+    #game-container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .hidden-letter {
+      font-size: 24px;
+      margin: 0 5px;
+    }
+    input[type="text"] {
+      font-size: 18px;
+      width: 30px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1>Word Guess Game</h1>
+    <p id="round">Round: 1/5</p>
+    <p id="lives">Lives: 3</p>
+    <p id="score">Score: 0</p>
+    <p>
+      Difficulty: 
+      <button onclick="startRound('easy')">Easy</button>
+      <button onclick="startRound('medium')">Medium</button>
+      <button onclick="startRound('hard')">Hard</button>
+    </p>
+    <p id="word-display"></p>
+    <div id="guess-section" style="display:none">
+      <input type="text" id="guess-input" maxlength="1">
+      <button onclick="makeGuess()">Guess</button>
+    </div>
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const easyWords = ["cat", "dog", "sun", "map", "pen"];
+    const mediumWords = ["banana", "circle", "monkey", "window"];
+    const hardWords = ["elephant", "dinosaur", "pineapple", "mountain"];
+
+    let currentWord = "";
+    let displayWord = [];
+    let guessedLetters = [];
+    let lives = 3;
+    let score = 0;
+    let round = 1;
+    let totalRounds = 5;
+    let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
+
+    function startRound(difficulty) {
+      guessedLetters = [];
+      lives = 3;
+      document.getElementById("lives").innerText = `Lives: ${lives}`;
+      document.getElementById("round").innerText = `Round: ${round}/${totalRounds}`;
+      document.getElementById("message").innerText = "";
+      document.getElementById("guess-section").style.display = "block";
+
+      if (difficulty === 'easy') {
+        currentWord = easyWords[Math.floor(Math.random() * easyWords.length)];
+      } else if (difficulty === 'medium') {
+        currentWord = mediumWords[Math.floor(Math.random() * mediumWords.length)];
+      } else {
+        currentWord = hardWords[Math.floor(Math.random() * hardWords.length)];
+      }
+
+      currentDifficulty = difficulty;
+      displayWord = Array(currentWord.length).fill("_");
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      document.getElementById("word-display").innerText = displayWord.join(" ");
+    }
+
+    function makeGuess() {
+      const input = document.getElementById("guess-input");
+      const guess = input.value.toLowerCase();
+      input.value = "";
+
+      if (!guess || guessedLetters.includes(guess)) {
+        return;
+      }
+
+      guessedLetters.push(guess);
+
+      let correct = false;
+      for (let i = 0; i < currentWord.length; i++) {
+        if (currentWord[i] === guess) {
+          displayWord[i] = guess;
+          correct = true;
+        }
+      }
+
+      if (!correct) {
+        lives--;
+        document.getElementById("lives").innerText = `Lives: ${lives}`;
+      }
+
+      updateDisplay();
+
+      if (!displayWord.includes("_")) {
+        score += difficultyMultiplier[currentDifficulty];
+        document.getElementById("score").innerText = `Score: ${score}`;
+        round++;
+        if (round > totalRounds) {
+          document.getElementById("message").innerText = `🎉 Game completed! Final Score: ${score}`;
+          document.getElementById("guess-section").style.display = "none";
+        } else {
+          document.getElementById("message").innerText = `✅ Word guessed! Choose difficulty for next round.`;
+          document.getElementById("guess-section").style.display = "none";
+        }
+      } else if (lives <= 0) {
+        document.getElementById("message").innerText = `💀 Game Over! The word was '${currentWord}'. Final Score: ${score}`;
+        document.getElementById("guess-section").style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>
