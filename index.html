@@ -22,13 +22,13 @@
       border: 2px solid #000;
       max-width: 500px;
       width: 100%;
-      padding: 40px;
+      padding: 50px;
     }
 
     h1 {
       text-align: center;
       font-size: 2rem;
-      margin-bottom: 40px;
+      margin-bottom: 50px;
       letter-spacing: 0.2em;
     }
 
@@ -36,7 +36,7 @@
       display: flex;
       justify-content: space-around;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 50px;
     }
 
     .stat {
@@ -45,21 +45,21 @@
       gap: 5px;
     }
 
-    .lives-display {
+    .lives {
       display: flex;
       justify-content: center;
       gap: 5px;
       margin-top: 5px;
     }
 
-    .life-indicator {
+    .health-bar {
       width: 10px;
       height: 10px;
       background: #000;
       border: 1px solid #000;
     }
 
-    .life-indicator.lost {
+    .lives.lost {
       background: transparent;
     }
 
@@ -86,7 +86,7 @@
     .word-display {
       text-align: center;
       font-size: 3rem;
-      margin: 40px 0;
+      margin: 50px 0;
     }
 
     .guess-section {
@@ -95,8 +95,8 @@
     }
 
     .guess-input {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       font-size: 2rem;
       text-align: center;
       border: 2px solid #000;
@@ -121,10 +121,10 @@
       <div class="stat">
         <div>Lives</div>
         <div id="lives">3</div>
-        <div class="lives-display" id="lives-display">
-          <div class="life-indicator"></div>
-          <div class="life-indicator"></div>
-          <div class="life-indicator"></div>
+        <div class="lives" id="lives">
+          <div class="health-bar"></div>
+          <div class="health-bar"></div>
+          <div class="health-bar"></div>
         </div>
       </div>
       <div class="stat">
@@ -146,7 +146,7 @@
 
     <div class="guess-section" id="guess-section">
       <input type="text" class="guess-input" id="guess-input" maxlength="1" placeholder="?" />
-      <button onclick="makeGuess()">Submit</button>
+      <button onclick="Guess()">Submit</button>
     </div>
 
     <div class="message" id="message"></div>
@@ -154,9 +154,25 @@
 
   <script>
     const words = {
-      easy: ["cat", "dog", "run", "sun", "car", "big", "red", "hat", "box", "fox"],
-      medium: ["apple", "house", "world", "table", "chair", "water", "music", "happy"],
-      hard: ["computer", "elephant", "beautiful", "adventure", "birthday", "chocolate"]
+      easy: ["blip", "crumb", "zest", "nix", "puff", "glow", "brim", "trek", "zap", "snug",
+            "quiz", "drab", "jolt", "whip", "echo", "glum", "snag", "peep", "loot", "yawn",
+            "flick", "chirp", "vibe", "gunk", "drip", "fuzz", "tote", "dusk", "flit", "zing",
+            "blur", "moat", "yelp", "flop", "romp", "quip", "mint", "swat", "bled", "whiz",
+            "rift", "snug", "leap", "tiff", "purr", "rasp", "wade", "slop", "knap", "blob"],
+
+      
+      medium: [ "marvel", "cactus", "inhale", "shimmer", "laptop", "brisket", "banter", "rocket", "dazzle", "pirate",
+            "sprout", "jagged", "trudge", "temple", "velvet", "thorns", "gleeing", "clutch", "babble", "galaxy",
+            "riddle", "snorkel", "frantic", "ember", "journey", "cobweb", "frolic", "hobble", "quiver", "pickle",
+            "orchard", "antics", "spiral", "cavern", "nectar", "grumpy", "magma", "lantern", "talent", "jingles",
+            "glitch", "whirly", "muffle", "puddle", "icicle", "jester", "trifle", "beeper", "murmur", "ticker"],
+
+      
+      hard: ["dragonfly", "firelight", "brainstorm", "silhouette", "undertone", "mandoline", "avalanche", "spaghetti", "whiplash", "labyrinth",
+            "gossamer", "flapjacks", "overgrown", "snapshot", "scuttling", "bluegrass", "memento", "serenade", "anchovies", "backpack",
+            "cinnamon", "harmonize", "wallpaper", "slumbered", "tumbleweed", "parchment", "exhilarate", "gemstone", "lighthouse", "scrapbook",
+            "marshland", "snowflake", "driftwood", "daydreams", "calloused", "everglade", "hummingbird", "quicksand", "sandstorm", "downspout",
+            "raspberry", "moonlight", "dreamlike", "goldsmith", "paperclip", "playhouse", "shoelaces", "brushfire", "candlestick"]
     };
 
     let currentWord = "";
@@ -164,6 +180,17 @@
     let lives = 3;
     let score = 0;
     let guessedLetters = [];
+
+
+    function updateDisplay() {
+      document.getElementById("word-display").textContent = displayWord.join(" ");
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("score").textContent = score;
+      
+      document.querySelectorAll(".health-bar").forEach((el, i) => {
+        el.classList.toggle("lost", i >= lives);
+      });
+    }
 
     function startGame(difficulty) {
       lives = 3;
@@ -174,27 +201,19 @@
       displayWord = Array(currentWord.length).fill("_");
       
       updateDisplay();
-      document.getElementById("difficulty-section").classList.add("hidden");
       document.getElementById("guess-section").style.display = "block";
       document.getElementById("guess-input").focus();
     }
 
-    function updateDisplay() {
-      document.getElementById("word-display").textContent = displayWord.join(" ");
-      document.getElementById("lives").textContent = lives;
-      document.getElementById("score").textContent = score;
-      
-      document.querySelectorAll(".life-indicator").forEach((el, i) => {
-        el.classList.toggle("lost", i >= lives);
-      });
-    }
 
-    function makeGuess() {
+    function Guess() {
       const input = document.getElementById("guess-input");
       const guess = input.value.toLowerCase();
       input.value = "";
 
-      if (!guess || guessedLetters.includes(guess)) return;
+      if (!guess || guessedLetters.includes(guess)){
+        return;
+      }
 
       guessedLetters.push(guess);
       let found = false;
@@ -207,7 +226,7 @@
       }
 
       if (!found) {
-        lives--;
+        lives-=1;
       }
 
       updateDisplay();
@@ -215,24 +234,29 @@
       if (!displayWord.includes("_")) {
         score += 100;
         updateDisplay();
-        document.getElementById("message").textContent = "WORD_SOLVED >> NEXT_WORD_READY";
+        document.getElementById("message").textContent = ">> WORD_SOLVED >>";
         document.getElementById("guess-section").style.display = "none";
+        
         setTimeout(() => {
           document.getElementById("difficulty-section").classList.remove("hidden");
           document.getElementById("message").textContent = "";
         }, 2000);
-      } else if (lives <= 0) {
+        
+      } 
+      
+      else if (lives <= 0) {
         document.getElementById("message").textContent = `GAME_OVER >> WORD_WAS: ${currentWord.toUpperCase()}`;
         document.getElementById("guess-section").style.display = "none";
+        
         setTimeout(() => {
           document.getElementById("difficulty-section").classList.remove("hidden");
           document.getElementById("message").textContent = "";
-        }, 3000);
+        }, 2000);
       }
     }
 
     document.getElementById("guess-input").addEventListener("keypress", e => {
-      if (e.key === "Enter") makeGuess();
+      if (e.key === "Enter") Guess();
     });
   </script>
 </body>
