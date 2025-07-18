@@ -150,35 +150,55 @@
     <div id="message"></div>
   </div>
 
-  <script>
-    const easyWords = ["cat", "dog", "sun", "map", "pen"];
-    const mediumWords = ["banana", "circle", "monkey", "window"];
-    const hardWords = ["elephant", "dinosaur", "pineapple", "mountain"];
+<script>
+  const wordSourceURL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json";
 
-    let currentWord = "";
-    let displayWord = [];
-    let guessedLetters = [];
-    let lives = 3;
-    let score = 0;
-    let round = 1;
-    let totalRounds = 5;
-    let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
-    let currentDifficulty = "";
+  let wordDictionary = {};
+  fetch(wordSourceURL)
+    .then(response => response.json())
+    .then(data => {
+      wordDictionary = Object.keys(data);
+    });
 
-    function startRound(difficulty) {
-      guessedLetters = [];
-      lives = 3;
-      updateLivesDisplay();
-      document.getElementById("round").innerText = `${round}/${totalRounds}`;
-      document.getElementById("message").innerText = "";
-      document.getElementById("guess-section").style.display = "block";
+  let currentWord = "";
+  let displayWord = [];
+  let guessedLetters = [];
+  let lives = 3;
+  let score = 0;
+  let round = 1;
+  let totalRounds = 5;
+  let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
+  let currentDifficulty = "";
 
-      const wordList = { easy: easyWords, medium: mediumWords, hard: hardWords };
-      currentWord = wordList[difficulty][Math.floor(Math.random() * wordList[difficulty].length)];
-      currentDifficulty = difficulty;
-      displayWord = Array(currentWord.length).fill("_");
-      updateDisplay();
+  function getRandomWordByLength(length) {
+    if (!wordDictionary || Object.keys(wordDictionary).length === 0) return null;
+    const words = wordDictionary.filter(w => w.length === length && /^[a-z]+$/.test(w));
+    return words[Math.floor(Math.random() * words.length)];
+  }
+
+  function startRound(difficulty) {
+    guessedLetters = [];
+    lives = 3;
+    updateLivesDisplay();
+    document.getElementById("round").innerText = `${round}/${totalRounds}`;
+    document.getElementById("message").innerText = "";
+    document.getElementById("guess-section").style.display = "block";
+
+    const lengthMap = { easy: 3, medium: 6, hard: 8 };
+    currentDifficulty = difficulty;
+    const word = getRandomWordByLength(lengthMap[difficulty]);
+
+    if (!word) {
+      document.getElementById("message").innerText = "LOADING_WORDS... please wait and try again.";
+      document.getElementById("guess-section").style.display = "none";
+      return;
     }
+
+    currentWord = word.toLowerCase();
+    displayWord = Array(currentWord.length).fill("_");
+    updateDisplay();
+  }
+</script>
 
     function updateDisplay() {
       document.getElementById("words").innerText = displayWord.join(" ");
