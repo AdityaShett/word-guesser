@@ -59,8 +59,8 @@
       border: 1px solid #000;
     }
 
-    .lives.lost {
-      background: transparent;
+    .health-bar.lost {
+      background: #fff;
     }
 
     .difficulty-label {
@@ -251,7 +251,7 @@
         setTimeout(() => {
           document.getElementById("difficulty-section").classList.remove("hidden");
           document.getElementById("message").textContent = "";
-        }, 2000);
+        }, 10000);
       }
     }
 
