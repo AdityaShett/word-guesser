@@ -32,11 +32,17 @@
       letter-spacing: 0.2em;
     }
 
-    #values {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
+    .stats {
+      display: flex;
+      justify-content: space-around;
       text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
 
     .lives-display {
@@ -57,7 +63,7 @@
       background: transparent;
     }
 
-    #difficulty_label {
+    .difficulty-label {
       text-align: center;
       margin: 30px 0 10px;
     }
@@ -77,18 +83,18 @@
       font-family: inherit;
     }
 
-    #words {
+    .word-display {
       text-align: center;
       font-size: 3rem;
       margin: 40px 0;
     }
 
-    #guess-section {
+    .guess-section {
       display: none;
       text-align: center;
     }
 
-    #guess-input {
+    .guess-input {
       width: 60px;
       height: 60px;
       font-size: 2rem;
@@ -98,23 +104,21 @@
       margin-right: 10px;
     }
 
-    #message {
+    .message {
       text-align: center;
       margin-top: 20px;
       min-height: 30px;
     }
+
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>WORD_GUESS.EXE</h1>
 
-    <div id="values">
-      <div>
-        <div>Round</div>
-        <div id="round">1/5</div>
-      </div>
-      <div>
+    <div class="stats">
+      <div class="stat">
         <div>Lives</div>
         <div id="lives">3</div>
         <div class="lives-display" id="lives-display">
@@ -123,76 +127,63 @@
           <div class="life-indicator"></div>
         </div>
       </div>
-      <div>
+      <div class="stat">
         <div>Score</div>
         <div id="score">0</div>
       </div>
     </div>
 
-    <div id="difficulty_label">SELECT_DIFFICULTY:</div>
-    <div class="difficulty-buttons">
-      <button onclick="startRound('easy')">Easy</button>
-      <button onclick="startRound('medium')">Medium</button>
-      <button onclick="startRound('hard')">Hard</button>
+    <div id="difficulty-section">
+      <div class="difficulty-label">SELECT_DIFFICULTY:</div>
+      <div class="difficulty-buttons">
+        <button onclick="startGame('easy')">Easy</button>
+        <button onclick="startGame('medium')">Medium</button>
+        <button onclick="startGame('hard')">Hard</button>
+      </div>
     </div>
 
-    <div id="words"></div>
+    <div class="word-display" id="word-display"></div>
 
-    <div id="guess-section">
-      <input type="text" id="guess-input" maxlength="1" placeholder="?" />
+    <div class="guess-section" id="guess-section">
+      <input type="text" class="guess-input" id="guess-input" maxlength="1" placeholder="?" />
       <button onclick="makeGuess()">Submit</button>
     </div>
 
-    <div id="message"></div>
+    <div class="message" id="message"></div>
   </div>
 
   <script>
-    const wordSourceURL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json";
-    let wordDictionary = [];
+    const words = {
+      easy: ["cat", "dog", "run", "sun", "car", "big", "red", "hat", "box", "fox"],
+      medium: ["apple", "house", "world", "table", "chair", "water", "music", "happy"],
+      hard: ["computer", "elephant", "beautiful", "adventure", "birthday", "chocolate"]
+    };
 
-    fetch(wordSourceURL)
-      .then(res => res.json())
-      .then(data => { wordDictionary = Object.keys(data); });
+    let currentWord = "";
+    let displayWord = [];
+    let lives = 3;
+    let score = 0;
+    let guessedLetters = [];
 
-    let currentWord = "", displayWord = [], guessedLetters = [];
-    let lives = 3, score = 0, round = 1, totalRounds = 5;
-    let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
-    let currentDifficulty = "";
-
-    function getRandomWordByLength(len) {
-      const filtered = wordDictionary.filter(w => w.length === len && /^[a-z]+$/.test(w));
-      return filtered[Math.floor(Math.random() * filtered.length)];
-    }
-
-    function startRound(difficulty) {
-      guessedLetters = [];
+    function startGame(difficulty) {
       lives = 3;
-      updateLivesDisplay();
-      document.getElementById("round").innerText = `${round}/${totalRounds}`;
-      document.getElementById("message").innerText = "";
-      document.getElementById("guess-section").style.display = "block";
-
-      const lengthMap = { easy: 3, medium: 6, hard: 8 };
-      currentDifficulty = difficulty;
-      const word = getRandomWordByLength(lengthMap[difficulty]);
-
-      if (!word) {
-        document.getElementById("message").innerText = "LOADING_WORDS... please wait and try again.";
-        document.getElementById("guess-section").style.display = "none";
-        return;
-      }
-
-      currentWord = word;
+      guessedLetters = [];
+      
+      const wordList = words[difficulty];
+      currentWord = wordList[Math.floor(Math.random() * wordList.length)];
       displayWord = Array(currentWord.length).fill("_");
+      
       updateDisplay();
+      document.getElementById("difficulty-section").classList.add("hidden");
+      document.getElementById("guess-section").style.display = "block";
+      document.getElementById("guess-input").focus();
     }
 
     function updateDisplay() {
-      document.getElementById("words").innerText = displayWord.join(" ");
-    }
-
-    function updateLivesDisplay() {
-      document.getElementById("lives").innerText = lives;
+      document.getElementById("word-display").textContent = displayWord.join(" ");
+      document.getElementById("lives").textContent = lives;
+      document.getElementById("score").textContent = score;
+      
       document.querySelectorAll(".life-indicator").forEach((el, i) => {
         el.classList.toggle("lost", i >= lives);
       });
@@ -206,50 +197,42 @@
       if (!guess || guessedLetters.includes(guess)) return;
 
       guessedLetters.push(guess);
-      let correct = false;
+      let found = false;
 
       for (let i = 0; i < currentWord.length; i++) {
         if (currentWord[i] === guess) {
           displayWord[i] = guess;
-          correct = true;
+          found = true;
         }
       }
 
-      if (!correct) {
+      if (!found) {
         lives--;
-        updateLivesDisplay();
       }
 
       updateDisplay();
 
       if (!displayWord.includes("_")) {
-        score += difficultyMultiplier[currentDifficulty];
-        document.getElementById("score").innerText = score;
-        round++;
-        document.getElementById("message").innerText =
-          round > totalRounds
-            ? `GAME_COMPLETE >> FINAL_SCORE: ${score}`
-            : "WORD_SOLVED >> NEXT_ROUND_READY";
+        score += 100;
+        updateDisplay();
+        document.getElementById("message").textContent = "WORD_SOLVED >> NEXT_WORD_READY";
         document.getElementById("guess-section").style.display = "none";
+        setTimeout(() => {
+          document.getElementById("difficulty-section").classList.remove("hidden");
+          document.getElementById("message").textContent = "";
+        }, 2000);
       } else if (lives <= 0) {
-        document.getElementById("message").innerText =
-          `GAME_OVER >> WORD_WAS: ${currentWord.toUpperCase()} >> SCORE: ${score}`;
+        document.getElementById("message").textContent = `GAME_OVER >> WORD_WAS: ${currentWord.toUpperCase()}`;
         document.getElementById("guess-section").style.display = "none";
+        setTimeout(() => {
+          document.getElementById("difficulty-section").classList.remove("hidden");
+          document.getElementById("message").textContent = "";
+        }, 3000);
       }
     }
 
     document.getElementById("guess-input").addEventListener("keypress", e => {
       if (e.key === "Enter") makeGuess();
-    });
-
-    new MutationObserver(() => {
-      const input = document.getElementById("guess-input");
-      if (document.getElementById("guess-section").style.display === "block") {
-        setTimeout(() => input.focus(), 100);
-      }
-    }).observe(document.getElementById("guess-section"), {
-      attributes: true,
-      attributeFilter: ["style"]
     });
   </script>
 </body>
