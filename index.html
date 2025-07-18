@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Word Guess</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: monospace;
@@ -150,55 +146,46 @@
     <div id="message"></div>
   </div>
 
-<script>
-  const wordSourceURL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json";
+  <script>
+    const wordSourceURL = "https://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json";
+    let wordDictionary = [];
 
-  let wordDictionary = {};
-  fetch(wordSourceURL)
-    .then(response => response.json())
-    .then(data => {
-      wordDictionary = Object.keys(data);
-    });
+    fetch(wordSourceURL)
+      .then(res => res.json())
+      .then(data => { wordDictionary = Object.keys(data); });
 
-  let currentWord = "";
-  let displayWord = [];
-  let guessedLetters = [];
-  let lives = 3;
-  let score = 0;
-  let round = 1;
-  let totalRounds = 5;
-  let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
-  let currentDifficulty = "";
+    let currentWord = "", displayWord = [], guessedLetters = [];
+    let lives = 3, score = 0, round = 1, totalRounds = 5;
+    let difficultyMultiplier = { easy: 100, medium: 300, hard: 700 };
+    let currentDifficulty = "";
 
-  function getRandomWordByLength(length) {
-    if (!wordDictionary || Object.keys(wordDictionary).length === 0) return null;
-    const words = wordDictionary.filter(w => w.length === length && /^[a-z]+$/.test(w));
-    return words[Math.floor(Math.random() * words.length)];
-  }
-
-  function startRound(difficulty) {
-    guessedLetters = [];
-    lives = 3;
-    updateLivesDisplay();
-    document.getElementById("round").innerText = `${round}/${totalRounds}`;
-    document.getElementById("message").innerText = "";
-    document.getElementById("guess-section").style.display = "block";
-
-    const lengthMap = { easy: 3, medium: 6, hard: 8 };
-    currentDifficulty = difficulty;
-    const word = getRandomWordByLength(lengthMap[difficulty]);
-
-    if (!word) {
-      document.getElementById("message").innerText = "LOADING_WORDS... please wait and try again.";
-      document.getElementById("guess-section").style.display = "none";
-      return;
+    function getRandomWordByLength(len) {
+      const filtered = wordDictionary.filter(w => w.length === len && /^[a-z]+$/.test(w));
+      return filtered[Math.floor(Math.random() * filtered.length)];
     }
 
-    currentWord = word.toLowerCase();
-    displayWord = Array(currentWord.length).fill("_");
-    updateDisplay();
-  }
-</script>
+    function startRound(difficulty) {
+      guessedLetters = [];
+      lives = 3;
+      updateLivesDisplay();
+      document.getElementById("round").innerText = `${round}/${totalRounds}`;
+      document.getElementById("message").innerText = "";
+      document.getElementById("guess-section").style.display = "block";
+
+      const lengthMap = { easy: 3, medium: 6, hard: 8 };
+      currentDifficulty = difficulty;
+      const word = getRandomWordByLength(lengthMap[difficulty]);
+
+      if (!word) {
+        document.getElementById("message").innerText = "LOADING_WORDS... please wait and try again.";
+        document.getElementById("guess-section").style.display = "none";
+        return;
+      }
+
+      currentWord = word;
+      displayWord = Array(currentWord.length).fill("_");
+      updateDisplay();
+    }
 
     function updateDisplay() {
       document.getElementById("words").innerText = displayWord.join(" ");
@@ -220,6 +207,7 @@
 
       guessedLetters.push(guess);
       let correct = false;
+
       for (let i = 0; i < currentWord.length; i++) {
         if (currentWord[i] === guess) {
           displayWord[i] = guess;
@@ -238,14 +226,14 @@
         score += difficultyMultiplier[currentDifficulty];
         document.getElementById("score").innerText = score;
         round++;
-        if (round > totalRounds) {
-          document.getElementById("message").innerText = `GAME_COMPLETE >> FINAL_SCORE: ${score}`;
-        } else {
-          document.getElementById("message").innerText = "WORD_SOLVED >> NEXT_ROUND_READY";
-        }
+        document.getElementById("message").innerText =
+          round > totalRounds
+            ? `GAME_COMPLETE >> FINAL_SCORE: ${score}`
+            : "WORD_SOLVED >> NEXT_ROUND_READY";
         document.getElementById("guess-section").style.display = "none";
       } else if (lives <= 0) {
-        document.getElementById("message").innerText = `GAME_OVER >> WORD_WAS: ${currentWord.toUpperCase()} >> SCORE: ${score}`;
+        document.getElementById("message").innerText =
+          `GAME_OVER >> WORD_WAS: ${currentWord.toUpperCase()} >> SCORE: ${score}`;
         document.getElementById("guess-section").style.display = "none";
       }
     }
@@ -254,10 +242,9 @@
       if (e.key === "Enter") makeGuess();
     });
 
-    new MutationObserver(mutations => {
-      const guessSection = document.getElementById("guess-section");
+    new MutationObserver(() => {
       const input = document.getElementById("guess-input");
-      if (guessSection.style.display === "block" && input) {
+      if (document.getElementById("guess-section").style.display === "block") {
         setTimeout(() => input.focus(), 100);
       }
     }).observe(document.getElementById("guess-section"), {
